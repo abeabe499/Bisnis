@@ -14,62 +14,69 @@
 <style>
 [hidden]{display:none!important}
 html,body{margin:0;height:100%;background:#050816;color:#eef2ff;font-family:system-ui,sans-serif}
-iframe{position:fixed;inset:0;width:100%;height:100%;border:0;background:#050816}
-#load,#setup{position:fixed;inset:0;display:grid;place-items:center;text-align:center;padding:20px;box-sizing:border-box}
-#load img,#setup img{width:96px;height:96px;border-radius:24px}
+.box{position:fixed;inset:0;display:grid;place-items:center;text-align:center;padding:20px;box-sizing:border-box}
+.box img{width:96px;height:96px;border-radius:24px}
 a{color:#a5f3fc}
-input{width:100%;max-width:420px;padding:12px;border-radius:12px;border:1px solid #475569;background:#0b1030;color:#fff;font-size:15px;box-sizing:border-box}
-button{margin-top:12px;padding:12px 22px;border:0;border-radius:12px;background:linear-gradient(135deg,#6366f1,#22d3ee);color:#fff;font-weight:700;font-size:15px}
-.err{color:#fca5a5;font-size:13px;min-height:18px}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px;max-width:340px;margin:14px auto 0}
+button{padding:14px;border:0;border-radius:12px;background:linear-gradient(135deg,#6366f1,#22d3ee);color:#fff;font-weight:700;font-size:15px}
+.sec{background:#1e293b}
+small{opacity:.8}
 </style>
 </head>
 <body>
 
-<div id="setup" hidden>
+<div id="pick" class="box" hidden>
   <div>
     <img src="icon-192.png" alt="Robot Biru">
     <h2>Halo, aku Biru!</h2>
-    <p>Tempel URL Web App Apps Script-mu sekali saja (yang berakhiran <b>/exec</b>).</p>
-    <input id="u" placeholder="https://script.google.com/macros/s/.../exec" inputmode="url" autocomplete="off">
-    <div class="err" id="e"></div>
-    <button onclick="save()">Simpan &amp; Buka</button>
+    <p>Chrome-mu login ke beberapa akun Google.<br>Pilih nomor urut akun <b>Gmail pemilik aplikasi</b> (yang tadi dipakai membuat Apps Script):</p>
+    <div class="row">
+      <button onclick="go(0)">Akun 1</button>
+      <button onclick="go(1)">Akun 2</button>
+      <button onclick="go(2)">Akun 3</button>
+      <button onclick="go(3)">Akun 4</button>
+    </div>
+    <p><small>Urutannya sama seperti daftar akun saat kamu mengetuk foto profil Google. Kalau salah, nanti muncul pesan error. Buka lagi alamat halaman ini dengan tambahan <b>#pilih</b> di belakangnya untuk memilih ulang.</small></p>
   </div>
 </div>
 
-<div id="load">
+<div id="splash" class="box" hidden>
   <div>
     <img src="icon-192.png" alt="Robot Biru">
     <p>Membuka Growth Mentor…</p>
-    <p style="font-size:13px;opacity:.8">Tidak terbuka? <a id="direct" href="#">Buka langsung</a> · <a href="#" onclick="resetUrl();return false">Ganti URL</a></p>
+    <p><small><a href="#" onclick="repick();return false">Ganti akun</a></small></p>
   </div>
 </div>
-<iframe id="app" title="Growth Mentor" allow="clipboard-write" hidden></iframe>
 
 <script>
-/* Jika kamu sudah punya URL-nya, boleh ditulis di sini. Kalau dibiarkan kosong, aplikasi akan memintanya sekali saat pertama dibuka. */
 var APP_URL = "https://script.google.com/macros/s/AKfycbxumZAR9uDtAahxuNBckRYGGYGRVaEy3Bo8OIC1pbkWmekv-l7-N87KPY3o-HQto-N6lg/exec";
+var KEY = 'gm_acc';
 
-var KEY = 'gm_app_url';
-function stored(){ try { return localStorage.getItem(KEY) || ''; } catch(e){ return ''; } }
-function valid(u){ return /^https:\/\/script\.google\.com\/macros\/s\/[^\s]+\/exec$/.test(u); }
-function start(u){
-  document.getElementById('setup').hidden = true;
-  document.getElementById('load').hidden = false;
-  document.getElementById('direct').href = u;
-  /* dialihkan langsung (tanpa iframe) agar tidak bentrok dengan banyak akun Google */
-  setTimeout(function(){ location.replace(u); }, 400);
+function build(n){ return APP_URL.replace('/macros/s/', '/macros/u/' + n + '/s/'); }
+function go(n){
+  try { localStorage.setItem(KEY, String(n)); } catch(e){}
+  location.replace(build(n));
 }
-function save(){
-  var u = document.getElementById('u').value.trim();
-  if(!valid(u)){ document.getElementById('e').textContent = 'URL belum benar. Harus diawali https://script.google.com/macros/s/ dan berakhiran /exec'; return; }
-  try { localStorage.setItem(KEY, u); } catch(e){}
-  start(u);
+function repick(){
+  try { localStorage.removeItem(KEY); } catch(e){}
+  location.hash = '';
+  location.reload();
 }
-function resetUrl(){ try { localStorage.removeItem(KEY); } catch(e){} location.reload(); }
 
-var u0 = APP_URL || stored();
-if (valid(u0)) start(u0);
-else { document.getElementById('load').hidden = true; document.getElementById('setup').hidden = false; }
+var saved = null;
+try { saved = localStorage.getItem(KEY); } catch(e){}
+
+if (location.hash === '#pilih') {
+  try { localStorage.removeItem(KEY); } catch(e){}
+  saved = null;
+}
+
+if (saved !== null && saved !== '') {
+  document.getElementById('splash').hidden = false;
+  setTimeout(function(){ go(saved); }, 400);
+} else {
+  document.getElementById('pick').hidden = false;
+}
 
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(function(){});
 </script>
