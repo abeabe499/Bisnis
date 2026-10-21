@@ -56,7 +56,8 @@ function start(u){
   document.getElementById('setup').hidden = true;
   document.getElementById('load').hidden = false;
   document.getElementById('direct').href = u;
-  var f = document.getElementById('app'); f.hidden = false; f.src = u;
+  /* dialihkan langsung (tanpa iframe) agar tidak bentrok dengan banyak akun Google */
+  setTimeout(function(){ location.replace(u); }, 400);
 }
 function save(){
   var u = document.getElementById('u').value.trim();
